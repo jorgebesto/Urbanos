@@ -3,176 +3,324 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Investigador de predios</title>
-<meta name="description" content="Toda la información de una matrícula inmobiliaria: Excel de la empresa, consulta del VUR y catastro (SINIC, Bogotá, Medellín).">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f3a5f'/%3E%3Cpath d='M8 23V12l8-5 8 5v11h-6v-6h-4v6z' fill='%23fff'/%3E%3C/svg%3E">
+<title>Portafolio de folios · SAE</title>
+<meta name="description" content="Filtra la base de inmuebles, junta VUR, polígono y fotos de cada folio y genera el informe y la presentación de portafolio.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23002060'/%3E%3Cpath d='M8 9h16v3H8zm0 6h16v3H8zm0 6h10v3H8z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
-<header class="cabecera">
-  <div class="marca">
-    <h1>Investigador de predios</h1>
-    <p>Todo lo de una matrícula inmobiliaria: Excel de la empresa · VUR · catastro</p>
+<header class="cab">
+  <div class="cab-marca">
+    <img src="plantilla/logo-cierre.png" alt="SAE · Gobierno de Colombia" class="cab-logo">
+    <div>
+      <h1>Portafolio de folios</h1>
+      <p>Búsqueda de activos, investigación de folios y documentos de portafolio</p>
+    </div>
   </div>
-  <form id="formBuscar" class="buscador" autocomplete="off">
-    <label for="matricula" class="oculto">Matrícula inmobiliaria</label>
-    <input id="matricula" placeholder="Matrícula, ej. 50C-1234567 o 008-2077" spellcheck="false">
-    <button type="submit">Buscar</button>
-  </form>
+  <div class="cab-estado">
+    <button type="button" class="pildora" id="btnBase"><span class="punto"></span><span id="txtBase">Base sin abrir</span></button>
+    <button type="button" class="pildora" id="btnGroq"><span class="punto"></span><span id="txtGroq">Groq sin configurar</span></button>
+  </div>
 </header>
+<div class="tricolor" aria-hidden="true"><span></span><span></span><span></span></div>
 
-<nav class="pestanas" aria-label="Secciones">
-  <button type="button" data-pestana="uno" class="activa">Un predio</button>
-  <button type="button" data-pestana="varios">Varios predios</button>
-  <a class="pest-enlace" href="portafolio.html">Portafolio de folios →</a>
+<nav class="pasos" aria-label="Pasos">
+  <button type="button" data-vista="buscar" class="activa"><b>1</b> Buscar folios</button>
+  <button type="button" data-vista="portafolio"><b>2</b> Portafolio <span id="cuentaPort" class="cuenta-pill">0</span></button>
+  <button type="button" data-vista="documentos"><b>3</b> Documentos</button>
 </nav>
 
-<div id="avisoNavegador" class="aviso" hidden></div>
+<div id="aviso" class="aviso" hidden></div>
 
-<div id="vistaUno">
-<main class="contenido">
-  <aside class="lateral">
-    <section class="panel">
-      <h2><span class="paso">1</span>Excel de la empresa</h2>
-      <p class="ayuda">Se busca cada predio por la matrícula (FMI). Se carga una vez y queda guardado solo en este navegador.</p>
-      <input type="file" id="excel" accept=".xlsx,.xlsm">
-      <div id="estadoExcel" class="estado">Sin Excel cargado</div>
-      <button type="button" id="quitarExcel" class="enlace" hidden>Quitar el Excel</button>
-    </section>
-
-    <section class="panel">
-      <h2><span class="paso">2</span>Consulta del VUR</h2>
-      <p class="ayuda">En el VUR abra <b>Datos Básicos</b>, seleccione toda la pantalla (Ctrl+A), cópiela (Ctrl+C) y péguela aquí. Puede pegar varias consultas seguidas.</p>
-      <textarea id="texto" placeholder="Datos Básicos - Certificado de Tradición y Libertad&#10;Fecha: ...&#10;N° Matrícula Inmobiliaría: ..."></textarea>
-      <div id="previa" class="previa"></div>
-      <p class="ayuda">…o suba el PDF de la consulta:</p>
-      <input type="file" id="pdf" accept=".pdf" multiple>
-      <div class="fila">
-        <button type="button" id="leerVur">Leer y buscar</button>
-        <button type="button" id="ejemplo" class="secundario">Cargar ejemplo</button>
-      </div>
-      <label class="chk"><input type="checkbox" id="catastro" checked> Consultar el catastro (SINIC y geoportales)</label>
-    </section>
-
-    <section class="panel">
-      <h2>Catastro en línea (Ibagué)</h2>
-      <p class="ayuda">Ibagué y otros gestores usan la plataforma <b>Catastro en línea</b>, que no deja que otra página la consulte. Sus datos (matrícula ↔ número predial, avalúo, áreas, construcciones y propietarios) se traen con un marcador del navegador:</p>
-      <ol class="ayuda pasos-cel">
-        <li>Arrastre este botón a la barra de marcadores (solo la primera vez): <a id="marcadorCel" class="marcador" href="#">Traer de Catastro en línea</a> <span id="marcadorNota" class="nota"></span></li>
-        <li>En la ficha del predio presione <b>Copiar pedido</b> y luego <b>Abrir el sitio</b>.</li>
-        <li>En el sitio haga clic en el marcador, pegue el pedido y presione Aceptar.</li>
-        <li>Los datos vuelven solos a esta página y la ficha se actualiza.</li>
-      </ol>
-    </section>
-
-    <section class="panel">
-      <h2>Matrículas guardadas</h2>
-      <p class="ayuda">Consultas del VUR guardadas en este navegador. Clic para ver la ficha.</p>
-      <ul id="historial" class="historial"><li class="nota">Todavía no hay consultas guardadas</li></ul>
-      <button type="button" id="borrarTodo" class="enlace peligro">Borrar todos los datos de este navegador</button>
-    </section>
-
-    <section class="panel">
-      <h2>Gestores catastrales (IGAC)</h2>
-      <p class="ayuda">Directorio oficial de quién lleva el catastro de cada municipio.</p>
-      <div id="estadoGestores" class="estado">—</div>
-      <div class="fila"><button type="button" id="actGestores" class="secundario">Actualizar directorio</button></div>
-      <details><summary>Ver gestores</summary><div id="listaGestores" class="lista-gestores"></div></details>
-    </section>
-  </aside>
-
-  <section class="resultados">
-    <div class="barra">
-      <h2 id="tituloRes">Fichas</h2>
-      <div class="fila">
-        <button type="button" id="descargar" hidden>Descargar Excel</button>
-        <button type="button" id="limpiar" class="secundario" hidden>Cerrar fichas</button>
+<!-- ================= 1. BUSCAR ================= -->
+<main id="vistaBuscar" class="vista">
+  <section class="solicitud">
+    <label for="solicitud" class="etiqueta">Solicitud</label>
+    <div class="solicitud-fila">
+      <textarea id="solicitud" rows="2" placeholder="Escriba lo que pidieron. Ej.: lotes rurales en el Meta o Casanare de más de 5 hectáreas, desocupados, que no sean propiedad horizontal"></textarea>
+      <div class="solicitud-acc">
+        <button type="button" id="preguntarIA" class="primario">✦ Aplicar con IA</button>
+        <div class="menu">
+          <button type="button" class="secundario" data-menu="menuGuardadas">Búsquedas guardadas ▾</button>
+          <div id="menuGuardadas" class="menu-lista" hidden></div>
+        </div>
+        <div class="menu">
+          <button type="button" class="secundario" data-menu="menuHistorial">Historial ▾</button>
+          <div id="menuHistorial" class="menu-lista" hidden></div>
+        </div>
       </div>
     </div>
-    <div id="fichas">
-      <div class="vacio">
-        <p><b>Busque una matrícula</b> arriba, o pegue una consulta del VUR a la izquierda.</p>
-        <p class="nota">La ficha junta la fila del Excel de la empresa, la última consulta del VUR guardada, la base catastral nacional (SINIC) y el geoportal del municipio cuando lo hay.</p>
-      </div>
+    <div id="respuestaIA" class="respuesta-ia" hidden></div>
+    <p class="nota">A Groq solo se envían los nombres de las columnas, sus valores posibles y la solicitud; nunca las filas de la base.</p>
+  </section>
+
+  <section class="activos">
+    <span class="etiqueta">Filtros activos</span>
+    <div id="chipsActivos" class="chips"></div>
+    <div class="activos-acc">
+      <button type="button" id="guardarBusqueda" class="enlace">Guardar esta búsqueda</button>
+      <button type="button" id="limpiarFiltros" class="enlace peligro">Limpiar filtros</button>
     </div>
   </section>
-</main>
-</div>
 
-<div id="vistaVarios" hidden>
-<main class="contenido">
-  <aside class="lateral">
-    <section class="panel">
-      <h2><span class="paso">1</span>Matrículas a investigar</h2>
-      <p class="ayuda">Una matrícula por línea (también sirven separadas por comas). O pegue varias consultas del VUR seguidas.</p>
-      <textarea id="loteTexto" placeholder="50C-1234567&#10;008-2077&#10;040-30938"></textarea>
-      <div id="lotePrevia" class="previa" data-listas="1"></div>
-    </section>
+  <section id="facetas" class="facetas"><div class="vacio">Abra la base para ver los filtros.</div></section>
 
-    <section class="panel">
-      <h2>Tomar del Excel de la empresa</h2>
-      <p id="loteSinExcel" class="ayuda">Cargue el Excel en la pestaña <b>Un predio</b> para poder tomar las matrículas de ahí.</p>
-      <div id="loteExcel" hidden>
-        <label class="campo-filtro">Estado <select id="filtroEstado"></select></label>
-        <label class="campo-filtro">Encargado <select id="filtroEncargado"></select></label>
-        <label class="campo-filtro">Municipio <select id="filtroMunicipio"></select></label>
-        <div class="fila"><button type="button" id="agregarDesdeExcel" class="secundario">Agregar matrículas del Excel</button></div>
+  <section class="mas-filtros">
+    <div class="rangos">
+      <label class="campo">Buscar texto <span class="nota">folio, dirección, vereda, descripción</span>
+        <input type="search" id="texto" placeholder="Ej.: 350-17 o LA ESPERANZA">
+      </label>
+      <div class="campo">Área de terreno
+        <div class="rango"><input type="number" id="atMin" placeholder="desde" min="0" step="any"><input type="number" id="atMax" placeholder="hasta" min="0" step="any">
+          <select id="atUni"><option value="1">m²</option><option value="10000">ha</option></select></div>
       </div>
-    </section>
-
-    <section class="panel">
-      <h2><span class="paso">2</span>Investigar</h2>
-      <label class="chk"><input type="checkbox" id="loteCatastro" checked> Consultar el catastro (SINIC y geoportales)</label>
-      <div class="fila">
-        <button type="button" id="loteIniciar">Investigar todas</button>
-        <button type="button" id="loteDetener" class="secundario" hidden>Detener</button>
-      </div>
-      <progress id="loteBarra" hidden></progress>
-      <div id="loteProgreso" class="previa"></div>
-      <p class="ayuda">Se consultan de a dos para no saturar los servidores del catastro.</p>
-    </section>
-  </aside>
-
-  <section class="resultados">
-    <div class="barra">
-      <h2>Resultados de varios predios</h2>
-      <div class="fila">
-        <button type="button" id="lotePedidoCel" class="secundario" hidden>Copiar pedido para Catastro en línea</button>
-        <button type="button" id="loteDescargar" hidden>Descargar Excel</button>
-        <button type="button" id="loteLimpiar" class="secundario" hidden>Limpiar</button>
+      <div class="campo">Área construida
+        <div class="rango"><input type="number" id="acMin" placeholder="desde" min="0" step="any"><input type="number" id="acMax" placeholder="hasta" min="0" step="any">
+          <select id="acUni"><option value="1">m²</option><option value="10000">ha</option></select></div>
       </div>
     </div>
-    <p id="loteResumen" class="resumen-lote"></p>
-    <div id="loteTabla"></div>
+    <details class="avanzado">
+      <summary>Reglas base y condiciones sobre otras columnas</summary>
+      <div class="avanzado-cuerpo">
+        <div>
+          <h3 class="sub">Reglas base</h3>
+          <label class="chk"><input type="checkbox" data-regla="no_aplica" checked> Trámites, contratos y comodatos en "no aplica" <span class="cuenta" data-cuenta="no_aplica"></span></label>
+          <label class="chk"><input type="checkbox" data-regla="comercial" checked> Estado comercial: no está en proceso / próximo en venta / pendiente publicación <span class="cuenta" data-cuenta="comercial"></span></label>
+          <label class="chk"><input type="checkbox" data-regla="viable" checked> Viable (comercial): NO o 0 <span class="cuenta" data-cuenta="viable"></span></label>
+        </div>
+        <div>
+          <h3 class="sub">Condiciones adicionales</h3>
+          <ul id="condiciones" class="condiciones"></ul>
+          <div class="nueva-cond">
+            <select id="condCol"></select>
+            <select id="condOp"></select>
+            <input id="condVal" placeholder="valor">
+            <button type="button" id="condAgregar" class="secundario">Agregar</button>
+          </div>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <section class="resultados">
+    <div class="barra-res">
+      <div class="barra-res-izq">
+        <b id="tituloRes">—</b>
+        <div id="resumenDep" class="resumen-dep"></div>
+      </div>
+      <div class="barra-res-der">
+        <label class="orden">Ordenar
+          <select id="orden">
+            <option value="">como viene en la base</option>
+            <option value="departamento">departamento y municipio</option>
+            <option value="areaT-">área de terreno (mayor primero)</option>
+            <option value="areaT+">área de terreno (menor primero)</option>
+            <option value="areaC-">área construida (mayor primero)</option>
+            <option value="avaluo-">avalúo catastral (mayor primero)</option>
+            <option value="avaluo+">avalúo catastral (menor primero)</option>
+            <option value="fmi">folio de matrícula</option>
+          </select>
+        </label>
+        <button type="button" id="descargarRes" class="secundario" disabled>Excel</button>
+        <button type="button" id="agregarSel" class="primario" disabled>Agregar al portafolio</button>
+      </div>
+    </div>
+    <div id="tablaRes" class="tabla-res"><div class="vacio">Abra la base para empezar.</div></div>
+    <div id="paginas" class="paginas"></div>
   </section>
 </main>
-</div>
+
+<!-- ================= 2. PORTAFOLIO ================= -->
+<main id="vistaPortafolio" class="vista" hidden>
+  <div class="barra-port">
+    <div>
+      <h2>Folios del portafolio</h2>
+      <p id="resumenPend" class="nota"></p>
+    </div>
+    <div class="fila">
+      <button type="button" id="buscarTodos" class="secundario">Buscar polígonos de todos</button>
+      <button type="button" id="textosTodos" class="secundario">✦ Mejorar textos de todos con IA</button>
+      <button type="button" id="exportarAvance" class="secundario">Exportar avance</button>
+      <label class="boton secundario">Importar avance<input type="file" id="importarAvance" accept=".json" hidden></label>
+      <button type="button" id="vaciarPort" class="enlace peligro">Vaciar</button>
+    </div>
+  </div>
+  <div id="items"><div class="vacio">Todavía no hay folios. Agréguelos desde <b>1. Buscar folios</b>.</div></div>
+</main>
+
+<!-- ================= 3. DOCUMENTOS ================= -->
+<main id="vistaDocumentos" class="vista" hidden>
+  <div class="docs">
+    <aside class="docs-lado">
+      <section class="tarjeta">
+        <h2 class="tit">Solicitante</h2>
+        <label class="campo">Nombre del solicitante<input id="solicitante" placeholder="Ej.: Asociación Fraternidad Internacional de Jóvenes"></label>
+        <label class="campo">Tipo (botón de la portada)<input id="tipoSolicitante" placeholder="ESAL"></label>
+        <label class="campo">Número de solicitud o radicado<input id="radicado" placeholder="Opcional"></label>
+        <label class="campo">Logo del solicitante<input type="file" id="logoSolicitante" accept="image/*"></label>
+        <div id="logoPrevia" class="logo-previa"></div>
+        <label class="campo">Solicitud (objeto del informe)<textarea id="textoSolicitud" rows="3"></textarea></label>
+      </section>
+      <section class="tarjeta">
+        <h2 class="tit">Conclusiones generales</h2>
+        <textarea id="conclusiones" rows="7" placeholder="Se genera con la plantilla; puede editarla o mejorarla con IA."></textarea>
+        <div class="fila">
+          <button type="button" id="concPlantilla" class="secundario">Generar con plantilla</button>
+          <button type="button" id="concIA" class="secundario">✦ Mejorar con IA</button>
+        </div>
+        <p id="estadoConc" class="nota"></p>
+      </section>
+      <section class="tarjeta">
+        <h2 class="tit">Descargar</h2>
+        <div id="pendDocs" class="pend-docs"></div>
+        <div class="fila columna">
+          <button type="button" id="genPptx" class="primario">Presentación (PowerPoint)</button>
+          <button type="button" id="genDocx" class="secundario">Informe (Word)</button>
+          <button type="button" id="genPdf" class="secundario">Informe (PDF)</button>
+        </div>
+        <p id="estadoGen" class="nota"></p>
+      </section>
+    </aside>
+    <section class="docs-previa">
+      <div class="previa-tabs">
+        <button type="button" data-previa="informe" class="activa">Vista previa del informe</button>
+        <button type="button" data-previa="presentacion">Vista previa de la presentación</button>
+        <button type="button" id="actualizarPrevia" class="enlace">Actualizar</button>
+      </div>
+      <div id="previaInforme" class="previa-informe"><div class="vacio">Agregue folios al portafolio para ver el informe.</div></div>
+      <div id="previaPresentacion" class="previa-presentacion" hidden></div>
+    </section>
+  </div>
+</main>
 
 <footer class="pie">
-  El Excel y las consultas del VUR se guardan solo en este navegador; no se envían a ningún servidor.
-  Al catastro solo se envía el número predial y la matrícula (Barranquilla, Antioquia, y Catastro en línea con el marcador). Fuentes: IGAC (SINIC, base catastral pública y directorio de gestores),
-  Catastro Bogotá (IDECA), Catastro Medellín, Catastro Barranquilla, Catastro Antioquia, Área Metropolitana de Bucaramanga, Catastro Cali y Catastro Ibagué (Catastro en línea).
+  La base se publica cifrada y solo se abre en el navegador con la contraseña. El VUR, los mapas y las fotos se guardan solo en este navegador.
+  A Groq se envían los nombres de las columnas y la solicitud; al pedir “Mejorar con IA”, también los datos del predio sin el nombre ni el documento del propietario.
+  Imagen satelital y mapas: Esri.
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/vur.js"></script>
-<script src="js/xlsx.js"></script>
-<script src="js/excel.js"></script>
-<script src="js/config.js"></script>
-<script src="js/catastroenlinea.js"></script>
-<script src="js/arcgis.js"></script>
-<script src="js/gestores.js"></script>
-<script src="js/geoportales.js"></script>
-<script src="js/contraste.js"></script>
-<script src="js/confirmacion.js"></script>
-<script src="js/almacen.js"></script>
-<script src="js/investigar.js"></script>
-<script src="js/reporte.js"></script>
-<script src="js/ejemplo.js"></script>
-<script src="js/app.js"></script>
+<!-- ================= DIÁLOGOS ================= -->
+<dialog id="dlgBase" class="dialogo">
+  <form method="dialog" class="dlg-cab"><h2>Base de inmuebles</h2><button class="cerrar" aria-label="Cerrar">✕</button></form>
+  <div id="estadoBase" class="estado">Buscando la base del repositorio…</div>
+  <form id="formClave" class="fila" hidden autocomplete="off">
+    <input type="password" id="clave" placeholder="Contraseña de la base" autocomplete="current-password">
+    <button type="submit" class="primario">Abrir</button>
+    <label class="chk"><input type="checkbox" id="recordarClave"> Recordar la contraseña en este navegador</label>
+  </form>
+  <details id="detActualizar">
+    <summary>Actualizar la base / abrir un archivo</summary>
+    <p class="ayuda">Elija la exportación del sistema tal cual sale (CSV o Excel), <b>sin abrirla y guardarla en Excel</b>: Excel daña la cédula catastral (la vuelve 5.00E+28).</p>
+    <input type="file" id="archivoBase" accept=".csv,.txt,.xlsx,.enc">
+    <div id="estadoArchivo" class="nota"></div>
+    <div id="cifrarCaja" hidden>
+      <p class="ayuda">Para publicarla, cífrela con una contraseña y suba <b>base.enc</b> a la carpeta <code>base/</code> del repositorio (reemplazando el anterior).</p>
+      <div class="fila">
+        <input type="password" id="claveNueva" placeholder="Contraseña nueva" autocomplete="new-password">
+        <input type="password" id="claveNueva2" placeholder="Repítala" autocomplete="new-password">
+        <button type="button" id="cifrarBase" class="primario">Descargar base.enc</button>
+      </div>
+    </div>
+  </details>
+</dialog>
+
+<dialog id="dlgGroq" class="dialogo">
+  <form method="dialog" class="dlg-cab"><h2>Agente de IA (Groq)</h2><button class="cerrar" aria-label="Cerrar">✕</button></form>
+  <label class="campo">API key de Groq<input type="password" id="groqKey" placeholder="gsk_…" autocomplete="off" spellcheck="false"></label>
+  <label class="campo">Modelo<select id="groqModelo"></select></label>
+  <p class="nota">Recomendado: llama-3.3-70b-versatile. La key queda guardada solo en este navegador; no la suba al repositorio.</p>
+  <div class="fila"><button type="button" id="guardarGroq" class="primario">Guardar</button><span id="estadoGroq" class="nota"></span></div>
+</dialog>
+
+<dialog id="dlgGuardar" class="dialogo chico">
+  <form method="dialog" class="dlg-cab"><h2>Guardar búsqueda</h2><button class="cerrar" aria-label="Cerrar">✕</button></form>
+  <label class="campo">Nombre<input id="nombreBusqueda" placeholder="Ej.: Lotes rurales Meta – ESAL"></label>
+  <div class="fila"><button type="button" id="confirmarGuardar" class="primario">Guardar</button></div>
+</dialog>
+
+<template id="tplItem">
+  <article class="item">
+    <header class="item-cab">
+      <button type="button" class="item-abrir" data-acc="abrir" aria-expanded="false">
+        <span class="item-num"></span>
+        <span class="item-tit"><b class="item-fmi"></b><span class="item-lugar"></span></span>
+      </button>
+      <ul class="pendientes"></ul>
+      <div class="item-acc">
+        <button type="button" class="mini" data-acc="subir" title="Subir">↑</button>
+        <button type="button" class="mini" data-acc="bajar" title="Bajar">↓</button>
+        <button type="button" class="mini" data-acc="quitar">Quitar</button>
+      </div>
+    </header>
+    <div class="item-cuerpo" hidden>
+      <div class="item-rejilla">
+        <section class="bloque">
+          <h3 class="sub">Datos para la presentación</h3>
+          <div class="campos-ficha"></div>
+        </section>
+        <section class="bloque">
+          <h3 class="sub">Consulta del VUR (Datos Básicos)</h3>
+          <textarea class="vur" rows="5" placeholder="Pegue aquí la consulta Datos Básicos de este folio (Ctrl+A, Ctrl+C en el VUR)"></textarea>
+          <div class="fila"><button type="button" class="secundario mini" data-acc="leerVur">Leer VUR y buscar polígono</button></div>
+          <div class="vur-res"></div>
+          <h3 class="sub">Ubicación en el catastro</h3>
+          <div class="fila"><button type="button" class="secundario mini" data-acc="poligono">Buscar polígono</button></div>
+          <div class="cat-res"></div>
+        </section>
+        <section class="bloque">
+          <h3 class="sub">Imágenes</h3>
+          <p class="nota">Arrastre la imagen al recuadro, haga clic en él y pegue con Ctrl+V, o use “Elegir”.</p>
+          <div class="slots"></div>
+          <h3 class="sub">Fotos adicionales <span class="nota">(opcional, van de a dos por diapositiva)</span></h3>
+          <div class="extras"></div>
+          <label class="boton secundario mini">Agregar fotos<input type="file" accept="image/*" multiple data-acc="extras" hidden></label>
+        </section>
+      </div>
+      <section class="contexto">
+        <div class="contexto-cab">
+          <h3 class="sub">Contextualización del predio (va en el informe)</h3>
+          <div class="fila">
+            <button type="button" class="secundario mini" data-acc="textoPlantilla">Generar con plantilla</button>
+            <button type="button" class="secundario mini" data-acc="textoIA">✦ Mejorar con IA</button>
+            <span class="estado-texto nota"></span>
+          </div>
+        </div>
+        <label class="campo">Observaciones de la visita (las usa la IA y van en el informe)<textarea data-campo="observaciones" rows="2"></textarea></label>
+        <div class="secciones-texto"></div>
+      </section>
+    </div>
+  </article>
+</template>
+
+<script src="js/catastro/utils.js"></script>
+<script src="js/catastro/vur.js"></script>
+<script src="js/catastro/xlsx.js"></script>
+<script src="js/catastro/config.js"></script>
+<script src="js/catastro/arcgis.js"></script>
+<script src="js/catastro/gestores.js"></script>
+<script src="js/catastro/geoportales.js"></script>
+<script src="js/catastro/contraste.js"></script>
+<script src="js/catastro/confirmacion.js"></script>
+<script src="js/catastro/textos.js"></script>
+<script src="js/lib/pptxgen.bundle.js"></script>
+<script src="js/lib/docx.iife.js"></script>
+<script src="js/app/config.js"></script>
+<script src="js/app/base.js"></script>
+<script src="js/app/filtros.js"></script>
+<script src="js/app/agente.js"></script>
+<script src="js/app/imagenes.js"></script>
+<script src="js/app/mapa.js"></script>
+<script src="js/app/contexto.js"></script>
+<script src="js/app/presentacion.js"></script>
+<script src="js/app/modelo.js"></script>
+<script src="js/app/informe.js"></script>
+<script src="js/app/informe-html.js"></script>
+<script src="js/app/nucleo.js"></script>
+<script src="js/app/buscar.js"></script>
+<script src="js/app/folios.js"></script>
+<script src="js/app/documentos.js"></script>
+<script src="js/app/inicio.js"></script>
 </body>
 </html>
