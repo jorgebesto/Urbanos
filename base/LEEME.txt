@@ -1,0 +1,9 @@
+En esta carpeta va el archivo base.enc: la base de inmuebles CIFRADA con contraseña.
+
+Cómo crearlo o actualizarlo:
+1. Abra portafolio.html (la página publicada) → "Actualizar la base / abrir un archivo".
+2. Elija la exportación del sistema tal cual sale (CSV o Excel), sin abrirla y guardarla en Excel antes.
+3. Escriba la contraseña dos veces y presione "Descargar base.enc".
+4. Suba ese base.enc a esta carpeta (base/), reemplazando el anterior.
+
+Nunca suba aquí el CSV o el Excel sin cifrar: el repositorio y la página son públicos.
