@@ -1,0 +1,8 @@
+# Nunca subir datos sin cifrar de la empresa
+*.csv
+*.xlsx
+*.xls
+*.pdf
+!ejemplos/*.xlsx
+# La base cifrada sí se sube
+!base/base.enc

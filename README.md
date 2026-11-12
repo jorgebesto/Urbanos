@@ -138,59 +138,75 @@ Para agregar otro geoportal edite `js/config.js` (sección `por_municipio`).
 
 ## Portafolio de folios (`portafolio.html`)
 
-Segunda página del repositorio. Parte de la base de inmuebles completa y termina en el **informe (Word)** y la **presentación de portafolio (PowerPoint)** con la plantilla SAE.
+Segunda página del repositorio. Parte de la base de inmuebles completa y termina en tres documentos con la identidad SAE:
 
-### 1. La base, cifrada
+- la **presentación de portafolio** (PowerPoint);
+- el **informe técnico** (Word);
+- el mismo informe en **PDF**.
 
-El repositorio y GitHub Pages son públicos, así que la base **nunca se sube sin cifrar**. Va en `base/base.enc`, cifrada con contraseña (AES-256). Solo se abre en el navegador de quien sabe la clave.
+Tiene tres pasos: **1. Buscar folios → 2. Portafolio → 3. Documentos**.
 
-Para crear o actualizar `base.enc`:
+Arriba hay dos botones de estado:
 
-1. En la página, abra **Actualizar la base / abrir un archivo**.
-2. Elija la exportación del sistema (CSV con `;` o Excel) **tal cual sale**. Si la abre y la guarda en Excel, la cédula catastral queda dañada (`5.00E+28`); la página avisa cuántas vienen así.
-3. Escriba la contraseña dos veces y presione **Descargar base.enc**.
-4. Suba ese archivo a la carpeta `base/` del repositorio, reemplazando el anterior.
+- **Base:** abre la base cifrada o la actualiza.
+- **IA:** pide la API key de Groq y el modelo. La key queda solo en ese navegador.
 
-Una base de 100.000 filas (unos 70 MB en CSV) queda en unos 4 MB cifrada y se abre en un par de segundos.
+### La base, cifrada
 
-### 2. Filtros
+El repositorio y GitHub Pages son públicos, así que la base va **cifrada** en `base/base.enc` (AES-256 con contraseña). Para crearla o actualizarla:
 
-**Reglas base**, que se pueden desmarcar:
+1. Presione el botón **Base** y luego **Actualizar la base**.
+2. Elija la exportación del sistema tal cual sale, sin abrirla y guardarla en Excel, porque Excel daña la cédula catastral.
+3. Escriba la contraseña y descargue `base.enc`.
+4. Súbalo a `base/`, reemplazando el anterior.
 
-- Las 12 columnas de trámites, contratos y comodatos (EN TRAMITE PROVISIONAL … PROCESO EN EL QUE SE ENCUENTRA COMERCIAL) en "no aplica".
-  - Cuentan como "no aplica": `#N/D`, vacío, `NO`, `0` y `NO APLICA`.
-  - Un contrato SIGMA en estado TERMINADO no saca al predio.
-- ESTADO COMERCIAL: NO ESTA EN PROCESO COMERCIAL, PROXIMO EN VENTA o PENDIENTE PUBLICACIÓN.
-- VIABLE SI/NO (COMERCIAL): `NO` o `0`.
+Una base de 100.000 filas queda en unos 4 MB y se abre en un par de segundos.
 
-**Panel de filtros:** departamento, municipio, subtipo, clasificación, activo social, PH, estado legal, materialización, inventario y ocupación. También tiene áreas en m² (las hectáreas se convierten solas), búsqueda de texto y condiciones sobre cualquier columna.
+### 1. Buscar folios
 
-**Agente de IA (Groq):** se escribe la solicitud en palabras y el agente la convierte en filtros. Los filtros quedan visibles y se pueden ajustar.
+- **Solicitud con IA:** se escribe lo que pidieron y el agente (Groq) arma los filtros.
+  - A Groq solo van los nombres de las columnas, sus valores posibles y la solicitud.
+  - También hay **búsquedas guardadas** y un **historial** de solicitudes.
+- **Filtros activos:** cada filtro se ve como una etiqueta y se quita con la ✕, incluidos los que puso la IA.
+- **Cuadrícula de filtros:** departamento, municipio, subtipo, clasificación, activo social, PH, estado legal, materialización, inventario y ocupación.
+  - Cada filtro trae su buscador y el conteo de cada valor, que se actualiza al momento.
+- **Áreas** en m² o en hectáreas, búsqueda de texto, y **condiciones** sobre cualquier otra columna.
+- **Reglas base:**
+  - trámites, contratos y comodatos en "no aplica" (`#N/D`, vacío, `NO`, `0`). Un contrato SIGMA TERMINADO no saca al predio;
+  - ESTADO COMERCIAL en NO ESTA EN PROCESO COMERCIAL, PROXIMO EN VENTA o PENDIENTE PUBLICACIÓN;
+  - VIABLE en NO o 0.
+- **Resultados** con barra fija, conteo por departamento (clic para filtrar), orden por área, avalúo o municipio, y descarga en Excel.
 
-- A Groq solo se envían los nombres de las columnas, sus valores posibles y la solicitud. **Ninguna fila de la base sale del navegador.**
-- La API key se escribe en **Configurar Groq** y queda guardada solo en ese navegador. No la ponga en el código.
+### 2. Portafolio
 
-Los resultados se pueden descargar en Excel. Para pasar folios al portafolio, márquelos y presione **Agregar al portafolio**.
+Cada folio muestra arriba qué le falta: VUR, vista aérea, fachada, interiores y texto. Por dentro tiene:
 
-### 3. Portafolio
+- **Datos para la presentación:** salen de la base y se pueden corregir.
+- **VUR:** se pega la consulta Datos Básicos. La página revisa que sea del mismo folio y busca el polígono en el IGAC y los gestores catastrales.
+- **Imágenes en espacios fijos:** Vista aérea, Fachada, Interior 1 e Interior 2. Las fotos adicionales son opcionales.
+  - La vista aérea se genera sola con el polígono. Si no se encuentra el polígono, ese espacio queda marcado como obligatorio.
+  - Las imágenes se pueden **arrastrar**, elegir del computador, o **pegar con Ctrl+V** después de hacer clic en el recuadro. Lo de pegar sirve para un recorte de pantalla del geoportal.
+- **Contextualización del predio**, en seis partes: ubicación, descripción física, situación jurídica, situación catastral, situación administrativa y concepto.
+  - **Plantilla:** la página arma el texto con los datos y lo actualiza sola.
+  - **Mejorar con IA:** Groq lo redacta de nuevo. Se le envían los datos del predio **sin el nombre ni el documento del propietario**.
+  - Todo se puede editar a mano.
+- **Exportar / importar avance:** un archivo `.json` con todo el portafolio (VUR, mapas, fotos y textos), para seguir en otro computador.
 
-Por cada folio:
+### 3. Documentos
 
-- **Datos para la presentación:** salen de la base y se pueden corregir a mano.
-- **VUR:** se pega la consulta Datos Básicos y se presiona **Leer VUR**. La página revisa que sea del mismo folio y luego busca el polígono sola.
-- **Georreferenciación:** con la cédula catastral de la base o la referencia catastral del VUR se consultan los mismos geoportales del investigador (IGAC/SINIC, Bogotá, Medellín, Antioquia, Barranquilla, Cali…).
-  - Con el polígono se arma la imagen satelital (Esri World Imagery) y el enlace de Google Maps.
-  - Si no hay polígono, se puede subir la imagen del mapa a mano.
-- **Fotos de la visita:** se marca cuál es la fachada; las demás van de a dos por diapositiva.
+- Datos del solicitante: nombre, tipo, radicado, logo y solicitud.
+- **Conclusiones generales:** con plantilla o con IA, editables.
+- Lista de lo que falta, y **vista previa** del informe y de las diapositivas antes de descargar.
+- **Informe:**
+  - portada institucional;
+  - objeto y alcance con cifras;
+  - criterios de búsqueda;
+  - resumen y mapa general de los folios;
+  - un capítulo por predio: foto, contextualización, concepto, ficha, VUR, contraste base/VUR/catastro, registro fotográfico y fuentes con enlaces;
+  - conclusiones.
+- **PDF:** abre la impresión del navegador; ahí se elige "Guardar como PDF".
 
-Datos del solicitante (nombre, tipo, logo) y botones para descargar:
-
-- **Presentación:** portada SAE, portada del solicitante y, por cada folio, georreferenciación, ficha con fachada y fotos de a dos. Al final va el cierre. Las imágenes fijas de la plantilla están en `plantilla/`.
-- **Informe Word:** solicitud y filtros aplicados, resumen y, por cada folio, datos de la base, VUR, contraste base/VUR/catastro, confirmación FMI ↔ cédula e imágenes.
-
-El portafolio (VUR, mapas y fotos) se guarda en el navegador, así que se puede cerrar y seguir después.
-
-Ajustes como valores de las reglas, modelo de Groq, colores o código del formato están en `js/portafolio/config.js`.
+Los ajustes (reglas, modelo de Groq, colores, código del formato) están en `js/portafolio/config.js`.
 
 ## Cosas a tener en cuenta
 
@@ -230,17 +246,24 @@ tests/prueba.mjs    pruebas sin internet:  node tests/prueba.mjs
 ejemplos/           consulta del VUR y Excel de prueba (datos ficticios)
 
 portafolio.html             página del portafolio
-css/portafolio.css          diseño del portafolio
+css/portafolio.css          diseño del portafolio (identidad SAE)
 base/base.enc               la base cifrada (la crea la misma página)
 plantilla/                  imágenes fijas de la plantilla SAE (logos, barra, foto de portada)
 js/portafolio/config.js     reglas base, modelo de Groq, colores (lo que se ajusta)
 js/portafolio/base.js       lectura del CSV/Excel, cifrado y búsqueda en la base
-js/portafolio/filtros.js    reglas base, panel y condiciones
+js/portafolio/filtros.js    reglas base, filtros y conteos
 js/portafolio/agente.js     agente de IA (Groq)
+js/portafolio/contexto.js   textos de contextualización y conclusiones (plantilla e IA)
 js/portafolio/imagenes.js   fotos: reducir, recortar
-js/portafolio/mapa.js       imagen satelital con el polígono
-js/portafolio/presentacion.js  PowerPoint con la plantilla
+js/portafolio/mapa.js       vista aérea con el polígono y mapa general
+js/portafolio/presentacion.js  diapositivas: PowerPoint y vista previa
+js/portafolio/modelo.js     contenido del informe
 js/portafolio/informe.js    informe Word
-js/portafolio/app.js        interfaz
+js/portafolio/informe-html.js  informe en HTML (vista previa y PDF)
+js/portafolio/nucleo.js     estado, base, guardado, exportar/importar
+js/portafolio/buscar.js     paso 1: buscar folios
+js/portafolio/folios.js     paso 2: portafolio
+js/portafolio/documentos.js paso 3: documentos
+js/portafolio/inicio.js     arranque
 js/lib/                     librerías PptxGenJS y docx (copiadas para no depender de internet)
 ```
